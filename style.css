@@ -1,16 +1,52 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    margin: 50px;
 }
 
 input {
-    padding: 10px;
+    padding: 8px;
+    margin-bottom: 10px;
     width: 200px;
-    margin-right: 10px;
 }
 
-button {
+table {
+    width: 80%;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
     padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+.drug-img {
+    width: 60px;
     cursor: pointer;
+}
+
+/* 이미지 확대 모달 */
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    max-width: 80%;
+}
+
+.modal-img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
 }
