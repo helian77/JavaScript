@@ -34,42 +34,55 @@ function parseCsv(csvData) {
 }
 
 async function searchDrug() {
-    const query = document.getElementById("searchBox").value.trim();
-    if (!query) return;
+    const query = document.getElementById("searchBox").value.trim().toLowerCase();
+    const rows = document.querySelectorAll("#drugTable tbody tr");
 
-    const drugs = await fetchDrugData();
-    const match = drugs.find(drug => drug.name.toLowerCase() === query.toLowerCase());
-
-    const resultElement = document.getElementById("result");
-    if (match) {
-        resultElement.innerHTML = `
-            <p>위치: ${match.location}</p>
-            <img src="${match.imageUrl}" onerror="this.onerror=null; this.src='default.png';" width="150">
-        `;
-    } else {
-        resultElement.innerHTML = "<p>위치를 찾을 수 없습니다.</p>";
-    }
+    rows.forEach(row => {
+        const drugName = row.querySelector(".drug-name").textContent.toLowerCase();
+        row.style.display = drugName.includes(query) ? "" : "none";
+    });
 }
 
 async function displayDrugList() {
-    const drugListElement = document.getElementById("drugList");
-    drugListElement.innerHTML = "<li>약품 목록을 불러오는 중...</li>";
+    const drugTableBody = document.querySelector("#drugTable tbody");
+    drugTableBody.innerHTML = "<tr><td colspan='3'>약품 목록을 불러오는 중...</td></tr>";
 
     const drugs = await fetchDrugData();
     if (drugs.length === 0) {
-        drugListElement.innerHTML = "<li>약품 데이터를 불러올 수 없습니다.</li>";
+        drugTableBody.innerHTML = "<tr><td colspan='3'>약품 데이터를 불러올 수 없습니다.</td></tr>";
         return;
     }
 
-    drugListElement.innerHTML = ""; // 기존 리스트 초기화
+    drugTableBody.innerHTML = ""; // 기존 데이터 초기화
     drugs.forEach(drug => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-            <p>${drug.name} - 위치: ${drug.location}</p>
-            <img src="${drug.imageUrl}" onerror="this.onerror=null; this.src='default.png';" width="100">
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
+            <td class="drug-name">${drug.name}</td>
+            <td>${drug.location}</td>
         `;
-        drugListElement.appendChild(li);
+        drugTableBody.appendChild(row);
     });
+
+    // 이미지 클릭 시 확대
+    document.querySelectorAll(".drug-img").forEach(img => {
+        img.addEventListener("click", function() {
+            showImagePopup(this.src);
+        });
+    });
+}
+
+// 이미지 확대 기능
+function showImagePopup(imageSrc) {
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+    modal.innerHTML = `
+        <div class="modal-content">
+            <img src="${imageSrc}" class="modal-img">
+        </div>
+    `;
+    modal.addEventListener("click", () => modal.remove()); // 클릭 시 닫기
+    document.body.appendChild(modal);
 }
 
 // 페이지 로드 시 자동 실행
