@@ -1,33 +1,58 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
+    margin: 0;
+    padding: 0;
 }
 
 input {
     padding: 8px;
     margin-bottom: 10px;
-    width: 200px;
+    width: 90%;
+    max-width: 400px;
 }
 
 table {
-    width: 80%;
+    width: 95%;
+    max-width: 800px;
     margin: 0 auto;
     border-collapse: collapse;
+    table-layout: fixed;  /* 테이블이 균등하게 배치됨 */
 }
 
 th, td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: center;
+    word-wrap: break-word;
 }
 
 th {
     background-color: #f4f4f4;
 }
 
+/* 약품 이미지 크기 조절 */
 .drug-img {
-    width: 60px;
+    width: 80px;
+    height: auto;
+    max-width: 100%;
     cursor: pointer;
+}
+
+/* 반응형 조정 (모바일 화면 최적화) */
+@media screen and (max-width: 600px) {
+    table {
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .drug-img {
+        width: 60px;
+    }
 }
 
 /* 이미지 확대 모달 */
