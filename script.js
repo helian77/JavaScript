@@ -16,15 +16,20 @@ function parseCsv(csvData) {
     const headers = lines[0].split("\t");
     const nameIndex = headers.indexOf("name");
     const locationIndex = headers.indexOf("location");
+    const imageIndex = headers.indexOf("image");
 
-    if (nameIndex === -1 || locationIndex === -1) {
+    if (nameIndex === -1 || locationIndex === -1 || imageIndex === -1) {
         console.error("CSV 헤더가 올바르지 않습니다.");
         return [];
     }
 
     return lines.slice(1).map(line => {
         const parts = line.split("\t");
-        return { name: parts[nameIndex].trim(), location: parts[locationIndex].trim() };
+        return { 
+            name: parts[nameIndex].trim(), 
+            location: parts[locationIndex].trim(),
+            imageUrl: parts[imageIndex].trim()
+        };
     });
 }
 
@@ -35,8 +40,15 @@ async function searchDrug() {
     const drugs = await fetchDrugData();
     const match = drugs.find(drug => drug.name.toLowerCase() === query.toLowerCase());
 
-    const resultText = match ? `위치: ${match.location}` : "위치를 찾을 수 없습니다.";
-    document.getElementById("result").textContent = resultText;
+    const resultElement = document.getElementById("result");
+    if (match) {
+        resultElement.innerHTML = `
+            <p>위치: ${match.location}</p>
+            <img src="${match.imageUrl}" onerror="this.onerror=null; this.src='default.png';" width="150">
+        `;
+    } else {
+        resultElement.innerHTML = "<p>위치를 찾을 수 없습니다.</p>";
+    }
 }
 
 async function displayDrugList() {
@@ -52,7 +64,10 @@ async function displayDrugList() {
     drugListElement.innerHTML = ""; // 기존 리스트 초기화
     drugs.forEach(drug => {
         const li = document.createElement("li");
-        li.textContent = `${drug.name} - 위치: ${drug.location}`;
+        li.innerHTML = `
+            <p>${drug.name} - 위치: ${drug.location}</p>
+            <img src="${drug.imageUrl}" onerror="this.onerror=null; this.src='default.png';" width="100">
+        `;
         drugListElement.appendChild(li);
     });
 }
