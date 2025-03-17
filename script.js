@@ -2,17 +2,12 @@ const gistUrl = "https://gist.githubusercontent.com/helian77/636699d654546e461d1
 
 async function fetchDrugData() {
     try {
-        const response = await fetch("https://gist.githubusercontent.com/helian77/636699d654546e461d13702adbf34eff/raw/drug_list.txt");
-
-        if (!response.ok) {
-            throw new Error("약품 데이터를 불러올 수 없습니다. (HTTP " + response.status + ")");
-        }
-
+        const response = await fetch(gistUrl);
         const data = await response.text();
-        return data;
+        return parseCsv(data);
     } catch (error) {
-        console.error("데이터를 불러오는 중 오류 발생:", error.message);
-        return null; // 오류 발생 시 null 반환
+        console.error("데이터를 불러오는 중 오류 발생:", error);
+        return [];
     }
 }
 
