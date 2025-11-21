@@ -25,10 +25,14 @@ function parseCsv(csvData) {
 
     return lines.slice(1).map(line => {
         const parts = line.split("\t");
+        const location = parts[locationIndex].trim();
+
         return { 
             name: parts[nameIndex].trim(), 
-            location: parts[locationIndex].trim(),
-            imageUrl: parts[imageIndex].trim()
+            location: location,
+            imageUrl: parts[imageIndex].trim(),
+            // 자동으로 위치 사진 경로 생성
+            locationImageUrl: `location/${location}.jpg`
         };
     });
 }
@@ -45,21 +49,26 @@ async function searchDrug() {
 
 async function displayDrugList() {
     const drugTableBody = document.querySelector("#drugTable tbody");
-    drugTableBody.innerHTML = "<tr><td colspan='3'>약품 목록을 불러오는 중...</td></tr>";
+    drugTableBody.innerHTML = "<tr><td colspan='4'>약품 목록을 불러오는 중...</td></tr>";
 
     const drugs = await fetchDrugData();
     if (drugs.length === 0) {
-        drugTableBody.innerHTML = "<tr><td colspan='3'>약품 데이터를 불러올 수 없습니다.</td></tr>";
+        drugTableBody.innerHTML = "<tr><td colspan='4'>약품 데이터를 불러올 수 없습니다.</td></tr>";
         return;
     }
 
-    drugTableBody.innerHTML = ""; // 기존 데이터 초기화
+    drugTableBody.innerHTML = "";
+
     drugs.forEach(drug => {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
             <td class="drug-name">${drug.name}</td>
             <td>${drug.location}</td>
+            <td>
+                <img src="${drug.locationImageUrl}" class="drug-img" 
+                     onerror="this.onerror=null; this.src='location/default.jpg';">
+            </td>
         `;
         drugTableBody.appendChild(row);
     });
@@ -72,7 +81,6 @@ async function displayDrugList() {
     });
 }
 
-// 이미지 확대 기능
 function showImagePopup(imageSrc) {
     const modal = document.createElement("div");
     modal.classList.add("modal");
@@ -81,9 +89,8 @@ function showImagePopup(imageSrc) {
             <img src="${imageSrc}" class="modal-img">
         </div>
     `;
-    modal.addEventListener("click", () => modal.remove()); // 클릭 시 닫기
+    modal.addEventListener("click", () => modal.remove());
     document.body.appendChild(modal);
 }
 
-// 페이지 로드 시 자동 실행
 window.onload = displayDrugList;
