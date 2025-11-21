@@ -17,6 +17,7 @@ const locationPatterns = [
 //    /^[A-Za-z]\d+$/,           // C4
 //    /^[A-Za-z]\d+-\d+$/,       // B12-34
 //    /^[가-힣]+\d+$/,            // 카세트96
+//    loc => loc.startsWith("특약"),   // 문자열 규칙도 가능
 ];
 
 function parseCsv(csvData) {
