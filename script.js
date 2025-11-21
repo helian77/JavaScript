@@ -11,6 +11,14 @@ async function fetchDrugData() {
     }
 }
 
+// 🎯 규칙을 원하는 만큼 추가 가능
+const locationPatterns = [
+    /^[A-Za-z]\d-\d+$/,        // A1-1
+//    /^[A-Za-z]\d+$/,           // C4
+//    /^[A-Za-z]\d+-\d+$/,       // B12-34
+//    /^[가-힣]+\d+$/,            // 카세트96
+];
+
 function parseCsv(csvData) {
     const lines = csvData.trim().split("\n");
     const headers = lines[0].split("\t");
@@ -31,8 +39,10 @@ function parseCsv(csvData) {
         const locationParts = locationRaw.split("/");
 
         // 🔥 정규식으로 A1-1 같은 형식만 필터링
+        // const validLocations = locationParts.filter(loc => /^[A-Za-z]\d-\d+$/.test(loc.trim()));
+        // 🔥 여러 규칙 중 하나라도 맞으면 true
         const validLocations = locationParts.filter(loc =>
-            /^[A-Za-z]\d-\d+$/.test(loc.trim())
+            locationPatterns.some(pattern => pattern.test(loc.trim()))
         );
 
         // 🔥 이미지 경로 생성
