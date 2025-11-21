@@ -25,14 +25,24 @@ function parseCsv(csvData) {
 
     return lines.slice(1).map(line => {
         const parts = line.split("\t");
-        const location = parts[locationIndex].trim();
+        const locationRaw = parts[locationIndex].trim();
+
+        // 🔥 위치를 슬래시로 분할
+        const locationParts = locationRaw.split("/");
+
+        // 🔥 정규식으로 A1-1 같은 형식만 필터링
+        const validLocations = locationParts.filter(loc =>
+            /^[A-Za-z]\d-\d+$/.test(loc.trim())
+        );
+
+        // 🔥 이미지 경로 생성
+        const locationImages = validLocations.map(loc => `location/${loc}.jpg`);
 
         return { 
             name: parts[nameIndex].trim(), 
-            location: location,
+            location: locationRaw,
             imageUrl: parts[imageIndex].trim(),
-            // 자동으로 위치 사진 경로 생성
-            locationImageUrl: `location/${location}.jpg`
+            locationImages: locationImages   // 여러 개의 이미지 목록
         };
     });
 }
@@ -61,14 +71,17 @@ async function displayDrugList() {
 
     drugs.forEach(drug => {
         const row = document.createElement("tr");
+
+        // 🔥 여러 위치 이미지를 하나의 HTML 문자열로 변환
+        const locationImagesHtml = drug.locationImages.map(img =>
+            `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.jpg';">`
+        ).join(" ");
+
         row.innerHTML = `
             <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
             <td class="drug-name">${drug.name}</td>
             <td>${drug.location}</td>
-            <td>
-                <img src="${drug.locationImageUrl}" class="drug-img" 
-                     onerror="this.onerror=null; this.src='location/default.jpg';">
-            </td>
+            <td>${locationImagesHtml}</td>
         `;
         drugTableBody.appendChild(row);
     });
