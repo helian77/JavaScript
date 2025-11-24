@@ -13,7 +13,8 @@ async function fetchDrugData() {
 
 // 🎯 규칙을 원하는 만큼 추가 가능
 const locationPatterns = [
-    /^[A-Za-z]\d-\d+$/,        // A1-1
+    /^[A-Za-z]\d/,        // A1-1
+//    /^[A-Za-z]\d-\d+$/,        // A1-1
 //    /^[A-Za-z]\d+$/,           // C4
 //    /^[A-Za-z]\d+-\d+$/,       // B12-34
 //    /^[가-힣]+\d+$/,            // 카세트96
