@@ -48,7 +48,7 @@ function parseCsv(csvData) {
         );
 
         // 🔥 이미지 경로 생성
-        const locationImages = validLocations.map(loc => `location/${loc}.jpg`);
+        const locationImages = validLocations.map(loc => `location/${loc}.png`);
 
         return { 
             name: parts[nameIndex].trim(), 
