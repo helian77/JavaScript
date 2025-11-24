@@ -90,7 +90,7 @@ async function displayDrugList() {
         ).join(" ");
 
         row.innerHTML = `
-            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
+            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.jpg';"></td>
             <td class="drug-name">${drug.name}</td>
             <td>${drug.location}</td>
             <td>${locationImagesHtml}</td>
