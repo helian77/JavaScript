@@ -1,3 +1,5 @@
+예를 들어, 약품 위치가 "A1-1/C2-3/카세트69"인 아스피린의 위치 사진을 "A1.jpg"와 "C2.jpg"로 출력시키고 싶습니다. 그러나 현재 코드는 "default.jpg"로만 연결시키고 있는 것 같습니다. A1.jpg 등이 지정한 위치에 존재하는데도 불러오지 못하는 이유와 앞으로의 수정방향에 대해서 알고 싶습니다.
+"script.js"
 const gistUrl = "https://gist.githubusercontent.com/helian77/636699d654546e461d13702adbf34eff/raw/drug_list.txt";
 
 async function fetchDrugData() {
@@ -11,9 +13,14 @@ async function fetchDrugData() {
     }
 }
 
-// 규칙 추가: A1-1 → A1 추출
+// 🎯 규칙을 원하는 만큼 추가 가능
 const locationPatterns = [
-    /^([A-Za-z]\d+)-\d+$/,  
+    /^([A-Za-z]\d+)-\d+$/,        // A1
+//    /^[A-Za-z]\d-\d+$/,        // A1-1
+//    /^[A-Za-z]\d+$/,           // C4
+//    /^[A-Za-z]\d+-\d+$/,       // B12-34
+//    /^[가-힣]+\d+$/,            // 카세트96
+//    loc => loc.startsWith("특약"),   // 문자열 규칙도 가능
 ];
 
 function parseCsv(csvData) {
@@ -23,25 +30,33 @@ function parseCsv(csvData) {
     const locationIndex = headers.indexOf("location");
     const imageIndex = headers.indexOf("image");
 
+    if (nameIndex === -1 || locationIndex === -1 || imageIndex === -1) {
+        console.error("CSV 헤더가 올바르지 않습니다.");
+        return [];
+    }
+
     return lines.slice(1).map(line => {
         const parts = line.split("\t");
         const locationRaw = parts[locationIndex].trim();
+
+        // 🔥 위치를 슬래시로 분할
         const locationParts = locationRaw.split("/");
 
-        // A1-1 형태 → A1 추출
-        const validLocations = locationParts.map(loc => {
-            const m = loc.trim().match(/^([A-Za-z]\d+)-\d+$/);
-            return m ? m[1] : null;   // A1, C2만 반환
-        }).filter(Boolean);
+        // 🔥 정규식으로 A1-1 같은 형식만 필터링
+        // const validLocations = locationParts.filter(loc => /^[A-Za-z]\d-\d+$/.test(loc.trim()));
+        // 🔥 여러 규칙 중 하나라도 맞으면 true
+        const validLocations = locationParts.filter(loc =>
+            locationPatterns.some(pattern => pattern.test(loc.trim()))
+        );
 
-        // 실제 파일명 규칙: A1.jpg
-        const locationImages = validLocations.map(prefix => `location/${prefix}.png`);
+        // 🔥 이미지 경로 생성
+        const locationImages = validLocations.map(loc => `location/${loc}.png`);
 
         return { 
-            name: parts[nameIndex].trim(),
+            name: parts[nameIndex].trim(), 
             location: locationRaw,
             imageUrl: parts[imageIndex].trim(),
-            locationImages
+            locationImages: locationImages   // 여러 개의 이미지 목록
         };
     });
 }
@@ -73,11 +88,11 @@ async function displayDrugList() {
 
         // 🔥 여러 위치 이미지를 하나의 HTML 문자열로 변환
         const locationImagesHtml = drug.locationImages.map(img =>
-            `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.png';">`
+            `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.jpg';">`
         ).join(" ");
 
         row.innerHTML = `
-            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
+            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.jpg';"></td>
             <td class="drug-name">${drug.name}</td>
             <td>${drug.location}</td>
             <td>${locationImagesHtml}</td>
