@@ -12,13 +12,9 @@ async function fetchDrugData() {
 }
 
 // 🎯 규칙을 원하는 만큼 추가 가능
+// 규칙 추가: A1-1 → A1 추출
 const locationPatterns = [
-    /^([A-Za-z]\d+)-\d+$/,        // A1
-//    /^[A-Za-z]\d-\d+$/,        // A1-1
-//    /^[A-Za-z]\d+$/,           // C4
-//    /^[A-Za-z]\d+-\d+$/,       // B12-34
-//    /^[가-힣]+\d+$/,            // 카세트96
-//    loc => loc.startsWith("특약"),   // 문자열 규칙도 가능
+    /^([A-Za-z]\d+)-\d+$/,  
 ];
 
 function parseCsv(csvData) {
@@ -28,33 +24,25 @@ function parseCsv(csvData) {
     const locationIndex = headers.indexOf("location");
     const imageIndex = headers.indexOf("image");
 
-    if (nameIndex === -1 || locationIndex === -1 || imageIndex === -1) {
-        console.error("CSV 헤더가 올바르지 않습니다.");
-        return [];
-    }
-
     return lines.slice(1).map(line => {
         const parts = line.split("\t");
         const locationRaw = parts[locationIndex].trim();
-
-        // 🔥 위치를 슬래시로 분할
         const locationParts = locationRaw.split("/");
 
-        // 🔥 정규식으로 A1-1 같은 형식만 필터링
-        // const validLocations = locationParts.filter(loc => /^[A-Za-z]\d-\d+$/.test(loc.trim()));
-        // 🔥 여러 규칙 중 하나라도 맞으면 true
-        const validLocations = locationParts.filter(loc =>
-            locationPatterns.some(pattern => pattern.test(loc.trim()))
-        );
+        // A1-1 형태 → A1 추출
+        const validLocations = locationParts.map(loc => {
+            const m = loc.trim().match(/^([A-Za-z]\d+)-\d+$/);
+            return m ? m[1] : null;   // A1, C2만 반환
+        }).filter(Boolean);
 
-        // 🔥 이미지 경로 생성
-        const locationImages = validLocations.map(loc => `location/${loc}.png`);
+        // 실제 파일명 규칙: A1.jpg
+        const locationImages = validLocations.map(prefix => `location/${prefix}.jpg`);
 
         return { 
-            name: parts[nameIndex].trim(), 
+            name: parts[nameIndex].trim(),
             location: locationRaw,
             imageUrl: parts[imageIndex].trim(),
-            locationImages: locationImages   // 여러 개의 이미지 목록
+            locationImages
         };
     });
 }
