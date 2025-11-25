@@ -19,8 +19,8 @@ const locationPatterns = [/^([A-Za-z]\d+)-\d+$/];
 
 function parseCsv(csvData) {
     const lines = csvData.trim().split("\n");
-
     const headers = lines[0].split("\t");
+
     const idxName = headers.indexOf("name");
     const idxLocation = headers.indexOf("location");
     const idxImage = headers.indexOf("image");
@@ -29,7 +29,7 @@ function parseCsv(csvData) {
         const cols = line.split("\t");
         const name = cols[idxName].trim();
         const locationRaw = cols[idxLocation].trim();
-        const mainImg = cols[idxImage].trim(); // 원본 이미지 경로
+        const mainImgUrl = cols[idxImage].trim(); // 약품 사진은 실제 URL
 
         const locationParts = locationRaw.split("/");
         const validLocations = locationParts.map(loc => {
@@ -40,8 +40,7 @@ function parseCsv(csvData) {
         return {
             name,
             locationRaw,
-            mainThumbnail: `drug/thumb/${mainImg}`, // 표에 표시되는 썸네일
-            mainOriginal: `drug/${mainImg}`,        // 클릭 시 표시되는 원본
+            mainImgUrl, // 약품 사진 실제 URL
             locationImages: validLocations.map(loc => ({
                 thumb: `location/thumb/${loc}.png`,
                 original: `location/${loc}.png`
@@ -51,46 +50,26 @@ function parseCsv(csvData) {
 }
 
 /* ---------------------------
-   Lazy Loading 썸네일 로딩 (Default.png fallback)
+   Lazy Loading 썸네일 로딩
 ----------------------------- */
 const thumbObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
         if (!entry.isIntersecting) return;
-
         const div = entry.target;
         const thumbUrl = div.dataset.thumb;
 
+        // 실제 이미지 로딩
+        div.style.backgroundImage = `url('${thumbUrl}')`;
+        div.classList.remove("pending");
+
+        // 로딩 실패 시 default 처리
         const img = new Image();
-        img.onload = () => {
-            div.style.backgroundImage = `url('${thumbUrl}')`;
-            div.classList.remove("pending");
-        };
-        img.onerror = () => {
-            div.style.backgroundImage = `url('location/thumb/Default.png')`;
-            div.classList.remove("pending");
-        };
+        img.onerror = () => div.style.backgroundImage = "url('location/default.png')";
         img.src = thumbUrl;
 
         thumbObserver.unobserve(div);
     });
 });
-
-/* ---------------------------
-   썸네일 슬롯 생성기
------------------------------ */
-function createThumbSlot(thumb, original) {
-    const div = document.createElement("div");
-    div.className = "image-slot pending";
-    div.dataset.thumb = gistBase + thumb;
-
-    // Lazy loading
-    thumbObserver.observe(div);
-
-    // 클릭 시 원본 팝업
-    div.addEventListener("click", () => showImagePopup(gistBase + original));
-
-    return div;
-}
 
 /* ---------------------------
    약품 리스트 출력
@@ -105,14 +84,26 @@ async function displayDrugList() {
     drugs.forEach(drug => {
         const tr = document.createElement("tr");
 
-        // 메인 약 이미지 슬롯
-        const mainSlot = createThumbSlot(drug.mainThumbnail, drug.mainOriginal);
+        // 🔹 메인 약 이미지 (URL 직접)
+        const mainSlot = document.createElement("img");
+        mainSlot.className = "drug-img";
+        mainSlot.src = drug.mainImgUrl;
+        mainSlot.onerror = () => mainSlot.src = "default.jpg";
+        mainSlot.addEventListener("click", () => showImagePopup(drug.mainImgUrl));
 
-        // 위치 이미지 슬롯 묶음
+        // 🔹 위치 사진 썸네일
         const locContainer = document.createElement("div");
         locContainer.className = "location-container";
+
         drug.locationImages.forEach(loc => {
-            const locSlot = createThumbSlot(loc.thumb, loc.original);
+            const locSlot = document.createElement("div");
+            locSlot.className = "image-slot small pending";
+            locSlot.dataset.thumb = gistBase + loc.thumb;
+
+            // 클릭 시 원본
+            locSlot.addEventListener("click", () => showImagePopup(gistBase + loc.original));
+
+            thumbObserver.observe(locSlot);
             locContainer.appendChild(locSlot);
         });
 
@@ -131,7 +122,7 @@ async function displayDrugList() {
 }
 
 /* ---------------------------
-    검색 기능
+   검색 기능
 ----------------------------- */
 function searchDrug() {
     const query = document.getElementById("searchBox").value.trim().toLowerCase();
@@ -144,7 +135,7 @@ function searchDrug() {
 }
 
 /* ---------------------------
-    원본 확대 팝업
+   원본 확대 팝업
 ----------------------------- */
 function showImagePopup(src) {
     const modal = document.createElement("div");
@@ -155,7 +146,6 @@ function showImagePopup(src) {
             <img src="${src}" class="modal-img">
         </div>
     `;
-
     modal.addEventListener("click", () => modal.remove());
     document.body.appendChild(modal);
 }
