@@ -1,8 +1,5 @@
 const gistUrl = "https://gist.githubusercontent.com/helian77/636699d654546e461d13702adbf34eff/raw/drug_list.txt";
 
-/* ---------------------------
-    CSV Fetch & Parse
------------------------------*/
 async function fetchDrugData() {
     try {
         const response = await fetch(gistUrl);
@@ -14,8 +11,9 @@ async function fetchDrugData() {
     }
 }
 
+// 규칙 추가: A1-1 → A1 추출
 const locationPatterns = [
-    /^([A-Za-z]\d+)-\d+$/,
+    /^([A-Za-z]\d+)-\d+$/,  
 ];
 
 function parseCsv(csvData) {
@@ -27,55 +25,36 @@ function parseCsv(csvData) {
 
     return lines.slice(1).map(line => {
         const parts = line.split("\t");
-
         const locationRaw = parts[locationIndex].trim();
         const locationParts = locationRaw.split("/");
 
+        // A1-1 형태 → A1 추출
         const validLocations = locationParts.map(loc => {
-            const match = loc.trim().match(/^([A-Za-z]\d+)-\d+$/);
-            return match ? match[1] : null;
+            const m = loc.trim().match(/^([A-Za-z]\d+)-\d+$/);
+            return m ? m[1] : null;   // A1, C2만 반환
         }).filter(Boolean);
 
-        const locationImages = validLocations.map(x => `location/${x}.png`);
+        // 실제 파일명 규칙: A1.jpg
+        const locationImages = validLocations.map(prefix => `location/${prefix}.png`);
 
-        return {
+        return { 
             name: parts[nameIndex].trim(),
             location: locationRaw,
             imageUrl: parts[imageIndex].trim(),
-            locationImages   // array
+            locationImages
         };
     });
 }
 
-/* ---------------------------
-    Lazy Loading Observer
------------------------------*/
+async function searchDrug() {
+    const query = document.getElementById("searchBox").value.trim().toLowerCase();
+    const rows = document.querySelectorAll("#drugTable tbody tr");
 
-const imageObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-
-        const div = entry.target;
-        const realUrl = div.dataset.src;
-
-        // 실제 이미지 로딩
-        div.style.backgroundImage = `url('${realUrl}')`;
-
-        div.classList.remove("pending");
-
-        // 로딩 실패 처리
-        const img = new Image();
-        img.onload = () => {}; 
-        img.onerror = () => div.classList.add("error");
-        img.src = realUrl;
-
-        imageObserver.unobserve(div);
+    rows.forEach(row => {
+        const drugName = row.querySelector(".drug-name").textContent.toLowerCase();
+        row.style.display = drugName.includes(query) ? "" : "none";
     });
-});
-
-/* ---------------------------
-    UI Rendering
------------------------------*/
+}
 
 async function displayDrugList() {
     const drugTableBody = document.querySelector("#drugTable tbody");
@@ -92,72 +71,36 @@ async function displayDrugList() {
     drugs.forEach(drug => {
         const row = document.createElement("tr");
 
-        /* 약 이미지 슬롯 생성 */
-        const drugImgSlot = document.createElement("div");
-        drugImgSlot.className = "image-slot pending";
-        drugImgSlot.dataset.src = drug.imageUrl;
+        // 🔥 여러 위치 이미지를 하나의 HTML 문자열로 변환
+        const locationImagesHtml = drug.locationImages.map(img =>
+            `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.png';">`
+        ).join(" ");
 
-        imageObserver.observe(drugImgSlot);
-
-        // 클릭 시 확대
-        drugImgSlot.addEventListener("click", () => showImagePopup(drug.imageUrl));
-
-        /* 위치 이미지 슬롯들 */
-        const locContainer = document.createElement("div");
-        locContainer.className = "location-container";
-
-        drug.locationImages.forEach(url => {
-            const locSlot = document.createElement("div");
-            locSlot.className = "image-slot small pending";
-            locSlot.dataset.src = url;
-
-            locSlot.addEventListener("click", () => showImagePopup(url));
-
-            imageObserver.observe(locSlot);
-            locContainer.appendChild(locSlot);
-        });
-
-        /* 테이블 구성 */
         row.innerHTML = `
-            <td class='img-cell'></td>
-            <td class='drug-name'>${drug.name}</td>
+            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
+            <td class="drug-name">${drug.name}</td>
             <td>${drug.location}</td>
-            <td class='loc-cell'></td>
+            <td>${locationImagesHtml}</td>
         `;
-
-        row.querySelector(".img-cell").appendChild(drugImgSlot);
-        row.querySelector(".loc-cell").appendChild(locContainer);
-
         drugTableBody.appendChild(row);
     });
-}
 
-/* ---------------------------
-    검색 기능
------------------------------*/
-function searchDrug() {
-    const query = document.getElementById("searchBox").value.trim().toLowerCase();
-    const rows = document.querySelectorAll("#drugTable tbody tr");
-
-    rows.forEach(row => {
-        const name = row.querySelector(".drug-name").textContent.toLowerCase();
-        row.style.display = name.includes(query) ? "" : "none";
+    // 이미지 클릭 시 확대
+    document.querySelectorAll(".drug-img").forEach(img => {
+        img.addEventListener("click", function() {
+            showImagePopup(this.src);
+        });
     });
 }
 
-/* ---------------------------
-    확대 팝업
------------------------------*/
-function showImagePopup(src) {
+function showImagePopup(imageSrc) {
     const modal = document.createElement("div");
-    modal.className = "modal";
-
+    modal.classList.add("modal");
     modal.innerHTML = `
         <div class="modal-content">
-            <img src="${src}" class="modal-img">
+            <img src="${imageSrc}" class="modal-img">
         </div>
     `;
-
     modal.addEventListener("click", () => modal.remove());
     document.body.appendChild(modal);
 }
