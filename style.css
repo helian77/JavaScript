@@ -67,11 +67,14 @@ th {
 }
 
 .modal-content {
-    max-width: 80%;
+    max-width: 90%;
+    max-height: 90%;
 }
 
 .modal-img {
-    width: 100%;
-    max-width: 400px;
+    width: auto;        /* 원본 비율 유지 */
+    height: auto;       /* 원본 비율 유지 */
+    max-width: 100%;    /* 화면 크기 맞춤 */
+    max-height: 100%;   /* 화면 높이에 맞춤 */
     border-radius: 10px;
 }
