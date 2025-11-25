@@ -11,7 +11,6 @@ async function fetchDrugData() {
     }
 }
 
-// 🎯 규칙을 원하는 만큼 추가 가능
 // 규칙 추가: A1-1 → A1 추출
 const locationPatterns = [
     /^([A-Za-z]\d+)-\d+$/,  
