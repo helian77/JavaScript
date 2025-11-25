@@ -35,7 +35,7 @@ function parseCsv(csvData) {
         }).filter(Boolean);
 
         // 실제 파일명 규칙: A1.jpg
-        const locationImages = validLocations.map(prefix => `location/${prefix}.jpg`);
+        const locationImages = validLocations.map(prefix => `location/${prefix}.png`);
 
         return { 
             name: parts[nameIndex].trim(),
@@ -73,11 +73,11 @@ async function displayDrugList() {
 
         // 🔥 여러 위치 이미지를 하나의 HTML 문자열로 변환
         const locationImagesHtml = drug.locationImages.map(img =>
-            `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.jpg';">`
+            `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.png';">`
         ).join(" ");
 
         row.innerHTML = `
-            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.jpg';"></td>
+            <td><img src="${drug.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
             <td class="drug-name">${drug.name}</td>
             <td>${drug.location}</td>
             <td>${locationImagesHtml}</td>
