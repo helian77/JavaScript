@@ -1,5 +1,3 @@
-예를 들어, 약품 위치가 "A1-1/C2-3/카세트69"인 아스피린의 위치 사진을 "A1.jpg"와 "C2.jpg"로 출력시키고 싶습니다. 그러나 현재 코드는 "default.jpg"로만 연결시키고 있는 것 같습니다. A1.jpg 등이 지정한 위치에 존재하는데도 불러오지 못하는 이유와 앞으로의 수정방향에 대해서 알고 싶습니다.
-"script.js"
 const gistUrl = "https://gist.githubusercontent.com/helian77/636699d654546e461d13702adbf34eff/raw/drug_list.txt";
 
 async function fetchDrugData() {
