@@ -13,7 +13,7 @@ async function fetchDrugData() {
 
 // 규칙 추가: A1-1 → A1 추출
 const locationPatterns = [
-    /^([A-Za-z]\d+)-\d+$/,  
+    /^([A-Za-z]\d+)-\d+$/,
 ];
 
 function parseCsv(csvData) {
@@ -31,13 +31,13 @@ function parseCsv(csvData) {
         // A1-1 형태 → A1 추출
         const validLocations = locationParts.map(loc => {
             const m = loc.trim().match(/^([A-Za-z]\d+)-\d+$/);
-            return m ? m[1] : null;   // A1, C2만 반환
+            return m ? m[1] : null;
         }).filter(Boolean);
 
-        // 실제 파일명 규칙: A1.jpg
-        const locationImages = validLocations.map(prefix => `location/${prefix}.png`);
+        // 테이블에서는 썸네일 사용
+        const locationImages = validLocations.map(prefix => `location/thumbnail/${prefix}.png`);
 
-        return { 
+        return {
             name: parts[nameIndex].trim(),
             location: locationRaw,
             imageUrl: parts[imageIndex].trim(),
@@ -71,7 +71,7 @@ async function displayDrugList() {
     drugs.forEach(drug => {
         const row = document.createElement("tr");
 
-        // 🔥 여러 위치 이미지를 하나의 HTML 문자열로 변환
+        // 여러 위치 이미지를 하나의 HTML 문자열로 변환
         const locationImagesHtml = drug.locationImages.map(img =>
             `<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.png';">`
         ).join(" ");
@@ -85,10 +85,17 @@ async function displayDrugList() {
         drugTableBody.appendChild(row);
     });
 
-    // 이미지 클릭 시 확대
+    // 이미지 클릭 시 팝업 (썸네일 -> 원본 이미지)
     document.querySelectorAll(".drug-img").forEach(img => {
         img.addEventListener("click", function() {
-            showImagePopup(this.src);
+            let originalSrc = this.src;
+
+            // 썸네일 경로일 경우 원본 경로로 변환
+            if (originalSrc.includes("/thumbnail/")) {
+                originalSrc = originalSrc.replace("/thumbnail/", "/");
+            }
+
+            showImagePopup(originalSrc);
         });
     });
 }
