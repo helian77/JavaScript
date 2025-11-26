@@ -31,7 +31,7 @@ function parseCsv(csvData) {
             return m ? m[1] : null;
         }).filter(Boolean);
 
-        const locationImages = validLocations.map(prefix => `location/thumbnail/${prefix}.png`);
+        const locationImages = [...new Set(validLocations.map(prefix => `location/thumbnail/${prefix}.png`))];
 
         return {
             name: parts[nameIndex].trim(),
