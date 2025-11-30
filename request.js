@@ -1,5 +1,5 @@
 // ==================== 수정 요청 ====================
-const gistRawUrl="https://gist.githubusercontent.com/helian77/2ba3078e640845962ad251c3f40e696a/raw/e31e019b67f5084cc63ee40c9f31f05023e3da2d/request_list.txt";
+const gistRawUrl="https://gist.githubusercontent.com/helian77/2ba3078e640845962ad251c3f40e696a/raw/request_list.txt";
 const gistId="2ba3078e640845962ad251c3f40e696a";
 const gistFileName="request_list.txt";
 const githubToken="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"; // 하드코딩
