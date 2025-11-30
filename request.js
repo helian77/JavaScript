@@ -2,7 +2,7 @@
 const gistRawUrl="https://gist.githubusercontent.com/helian77/2ba3078e640845962ad251c3f40e696a/raw/request_list.txt";
 const gistId="2ba3078e640845962ad251c3f40e696a";
 const gistFileName="request_list.txt";
-const githubToken="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"; // 하드코딩
+const githubToken="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"; // 하드코딩
 
 async function fetchRemoteRequests() {
     try {
