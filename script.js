@@ -28,7 +28,7 @@ function parseCsv(csvData) {
 
         // 새 규칙: 항목 뒤에 "-숫자"가 있으면 제거
         const normalizedLocations = locationParts.map(loc =>
-            loc.trim().replace(/-\d+$/, "")
+            loc.trim().replace(/-.+$/, "")
         );
 
         // 중복 제거 + 이미지 경로 만들기
