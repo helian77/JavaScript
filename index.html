@@ -21,6 +21,11 @@ th { background:#f4f4f4; }
 .delete-btn:hover { background:#e03434; }
 #requestList li { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:4px 6px; border:1px solid #ccc; background:#fff; }
 #requestList { list-style:none; padding:0; }
+
+/* CSS로 모바일 숨김 처리 */
+@media (max-width: 768px) {
+    #requestSidebar { display: none; }
+}
 </style>
 </head>
 <body>
@@ -103,6 +108,9 @@ function formatNow(){const d=new Date(),p=n=>String(n).padStart(2,"0"); return `
 
 async function loadRequests(){
     const ul=document.getElementById("requestList");
+    // 모바일이면 요청 로드하지 않음
+    if(window.innerWidth <= 768){ ul.innerHTML=""; return; }
+
     try{
         const res=await fetch(serverUrl); const data=await res.json();
         if(!data.length){ ul.innerHTML="<li>요청이 없습니다.</li>"; return; }
@@ -119,7 +127,7 @@ async function loadRequests(){
 async function addRequest(){
     const txt=document.getElementById("requestInput").value.trim();
     if(!txt){ alert("내용을 입력하세요."); return;}
-    if(txt.length>200){ alert("200자 이하 입력"); return;}
+    if(txt.length>200){ alert("200자 이하 입력"); return; }
     const item={date:formatNow(), text:txt};
     try{
         await fetch(serverUrl, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(item) });
