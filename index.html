@@ -8,6 +8,24 @@
 </head>
 <body>
     <h1>약 위치 찾기</h1>
+    <!-- 수정 요청 영역 (상단에 표시) -->
+<div id="requestContainer">
+    <h2>📝 수정 요청 목록</h2>
+    <ul id="requestList"></ul>
+</div>
+
+<div id="requestInputBox">
+    <textarea id="requestInput" maxlength="200" placeholder="200자 이내로 수정 요청을 입력하세요"></textarea>
+    <div style="margin-top:6px;">
+        <button id="addSharedBtn">공유 저장 (Gist에 추가)</button>
+        <button id="addLocalBtn">로컬에만 저장</button>
+    </div>
+</div>
+
+<!-- 기존 스크립트들 -->
+<script src="script.js"></script>
+<script src="request.js"></script>
+
     <input type="text" id="searchBox" placeholder="약 이름을 입력하세요" onkeyup="searchDrug()">
 
     <table id="drugTable">
