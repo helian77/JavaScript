@@ -26,14 +26,19 @@ function parseCsv(csvData) {
         const locationRaw = parts[locationIndex].trim();
         const locationParts = locationRaw.split("/");
 
-        // 새 규칙: '-' 뒤에 어떤 문자가 와도 제거
+        // '-' 뒤의 모든 문자열 제거
         const normalizedLocations = locationParts.map(loc =>
             loc.trim().replace(/-.+$/, "")
         );
 
-        // 중복 제거 및 이미지 변환
+        // ❗ 카세트 항목 제거
+        const filteredLocations = normalizedLocations.filter(loc =>
+            !loc.includes("카세트")    // <-- 이 라인이 추가된 부분
+        );
+
+        // 중복 제거 + 썸네일 경로 생성
         const locationImages = [...new Set(
-            normalizedLocations.map(loc => `location/thumbnail/${loc}.png`)
+            filteredLocations.map(loc => `location/thumbnail/${loc}.png`)
         )];
 
         return {
@@ -44,6 +49,7 @@ function parseCsv(csvData) {
         };
     });
 }
+
 
 
 
