@@ -26,12 +26,12 @@ function parseCsv(csvData) {
         const locationRaw = parts[locationIndex].trim();
         const locationParts = locationRaw.split("/");
 
-        // 새 규칙: 항목 뒤에 "-숫자"가 있으면 제거
+        // 새 규칙: '-' 뒤에 어떤 문자가 와도 제거
         const normalizedLocations = locationParts.map(loc =>
             loc.trim().replace(/-.+$/, "")
         );
 
-        // 중복 제거 + 이미지 경로 만들기
+        // 중복 제거 및 이미지 변환
         const locationImages = [...new Set(
             normalizedLocations.map(loc => `location/thumbnail/${loc}.png`)
         )];
@@ -44,6 +44,7 @@ function parseCsv(csvData) {
         };
     });
 }
+
 
 
 async function searchDrug() {
