@@ -26,12 +26,15 @@ function parseCsv(csvData) {
         const locationRaw = parts[locationIndex].trim();
         const locationParts = locationRaw.split("/");
 
-        const validLocations = locationParts.map(loc => {
-            const m = loc.trim().match(/^([A-Za-z]\d+)-\d+$/);
-            return m ? m[1] : null;
-        }).filter(Boolean);
+        // 새 규칙: 항목 뒤에 "-숫자"가 있으면 제거
+        const normalizedLocations = locationParts.map(loc =>
+            loc.trim().replace(/-\d+$/, "")
+        );
 
-        const locationImages = [...new Set(validLocations.map(prefix => `location/thumbnail/${prefix}.png`))];
+        // 중복 제거 + 이미지 경로 만들기
+        const locationImages = [...new Set(
+            normalizedLocations.map(loc => `location/thumbnail/${loc}.png`)
+        )];
 
         return {
             name: parts[nameIndex].trim(),
@@ -41,6 +44,7 @@ function parseCsv(csvData) {
         };
     });
 }
+
 
 async function searchDrug() {
     const query = document.getElementById("searchBox").value.trim().toLowerCase();
