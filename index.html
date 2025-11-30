@@ -1,45 +1,202 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>약 위치 찾기</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>약 위치 찾기 + 수정 요청</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+}
+#mainContent {
+    flex: 2;
+    padding: 20px;
+    overflow-y: auto;
+}
+#requestSidebar {
+    flex: 1;
+    border-left: 2px solid #ccc;
+    padding: 20px;
+    max-width: 400px;
+    overflow-y: auto;
+    background: #fdf7e3;
+}
+input, textarea, button {
+    font-family: inherit;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    word-wrap: break-word;
+}
+th { background-color: #f4f4f4; }
+.drug-img { width: 80px; height: auto; cursor:pointer; }
+.modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; }
+.modal-content { max-width:90%; max-height:90%; }
+.modal-img { width:auto; height:auto; max-width:100%; max-height:100%; border-radius:10px; }
+#requestInput { width:100%; height:60px; resize:none; margin-bottom:6px; }
+.delete-btn { background:#ff6b6b; border:none; padding:4px 8px; color:#fff; cursor:pointer; border-radius:4px; }
+.delete-btn:hover { background:#e03434; }
+#requestList li { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:4px 6px; border:1px solid #ccc; background:#fff; }
+#requestList { list-style:none; padding:0; }
+</style>
 </head>
 <body>
+
+<div id="mainContent">
     <h1>약 위치 찾기</h1>
-    <!-- 수정 요청 영역 (상단에 표시) -->
-<div id="requestContainer">
-    <h2>📝 수정 요청 목록</h2>
-    <ul id="requestList"></ul>
-</div>
-
-<div id="requestInputBox">
-    <textarea id="requestInput" maxlength="200" placeholder="200자 이내로 수정 요청을 입력하세요"></textarea>
-    <div style="margin-top:6px;">
-        <button id="addSharedBtn">공유 저장 (Gist에 추가)</button>
-        <button id="addLocalBtn">로컬에만 저장</button>
-    </div>
-</div>
-
-<!-- 기존 스크립트들 -->
-<script src="script.js"></script>
-<script src="request.js"></script>
-
     <input type="text" id="searchBox" placeholder="약 이름을 입력하세요" onkeyup="searchDrug()">
-
     <table id="drugTable">
         <thead>
             <tr>
                 <th>약품 사진</th>
                 <th>약품명</th>
                 <th>위치</th>
-                <th>위치 사진</th> <!-- 추가됨 -->
+                <th>위치 사진</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
+</div>
 
-    <script src="script.js"></script>
+<div id="requestSidebar">
+    <h2>📝 수정 요청 목록</h2>
+    <textarea id="requestInput" maxlength="200" placeholder="200자 이내로 수정 요청을 입력하세요"></textarea>
+    <div style="margin-bottom:10px;">
+        <button id="addSharedBtn">공유 저장</button>
+        <button id="addLocalBtn">로컬 저장</button>
+    </div>
+    <ul id="requestList"></ul>
+</div>
+
+<script>
+// ==================== 약품 데이터 ====================
+const gistUrl = "https://gist.githubusercontent.com/helian77/636699d654546e461d13702adbf34eff/raw/drug_list.txt";
+const imageCache = {}; let currentModal = null;
+
+async function fetchDrugData() {
+    try {
+        const resp = await fetch(gistUrl);
+        const data = await resp.text();
+        return parseCsv(data);
+    } catch { return []; }
+}
+function parseCsv(csvData) {
+    const lines = csvData.trim().split("\n");
+    const headers = lines[0].split("\t");
+    const nameIndex = headers.indexOf("name");
+    const locationIndex = headers.indexOf("location");
+    const imageIndex = headers.indexOf("image");
+    return lines.slice(1).map(line=>{
+        const parts = line.split("\t");
+        const locationParts = parts[locationIndex].trim().split("/").map(l=>l.trim().replace(/-.+$/,"")).filter(l=>!l.includes("카세트"));
+        const locationImages = [...new Set(locationParts.map(loc=>`location/thumbnail/${loc}.png`))];
+        return { name: parts[nameIndex].trim(), location: parts[locationIndex].trim(), imageUrl: parts[imageIndex].trim(), locationImages };
+    });
+}
+
+async function displayDrugList() {
+    const tbody = document.querySelector("#drugTable tbody");
+    tbody.innerHTML="<tr><td colspan='4'>로딩 중...</td></tr>";
+    const drugs = await fetchDrugData();
+    if(drugs.length===0){ tbody.innerHTML="<tr><td colspan='4'>데이터를 불러올 수 없습니다.</td></tr>"; return;}
+    tbody.innerHTML="";
+    drugs.forEach(d=>{
+        const imgs = d.locationImages.map(img=>`<img src="${img}" class="drug-img small" onerror="this.onerror=null; this.src='location/default.png';">`).join(" ");
+        const row = document.createElement("tr");
+        row.innerHTML=`<td><img src="${d.imageUrl}" class="drug-img" onerror="this.onerror=null; this.src='default.png';"></td>
+            <td class="drug-name">${d.name}</td>
+            <td>${d.location}</td>
+            <td>${imgs}</td>`;
+        tbody.appendChild(row);
+    });
+    document.querySelectorAll(".drug-img").forEach(img=>{
+        img.addEventListener("click",function(){
+            let src=this.src;
+            if(src.includes("/thumbnail/")) src=src.replace("/thumbnail/","/");
+            showImagePopup(src);
+        });
+    });
+}
+function showImagePopup(src){
+    if(currentModal) currentModal.remove();
+    let imgEl = imageCache[src] || (imageCache[src]=document.createElement("img"));
+    imgEl.src=src; imgEl.className="modal-img";
+    const modal=document.createElement("div"); modal.className="modal";
+    const modalContent=document.createElement("div"); modalContent.className="modal-content";
+    modalContent.appendChild(imgEl); modal.appendChild(modalContent);
+    modal.addEventListener("click",()=>modal.remove());
+    document.body.appendChild(modal); currentModal=modal;
+}
+function searchDrug(){
+    const q=document.getElementById("searchBox").value.trim().toLowerCase();
+    document.querySelectorAll("#drugTable tbody tr").forEach(r=>{
+        const n=r.querySelector(".drug-name").textContent.toLowerCase();
+        r.style.display=n.includes(q)?"":"none";
+    });
+}
+window.onload=displayDrugList;
+
+// ==================== 수정 요청 ====================
+const gistRawUrl="https://gist.githubusercontent.com/helian77/2ba3078e640845962ad251c3f40e696a/raw/e31e019b67f5084cc63ee40c9f31f05023e3da2d/request_list.txt";
+const gistId="2ba3078e640845962ad251c3f40e696a";
+const gistFileName="request_list.txt";
+const githubToken="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"; // 하드코딩
+
+function formatNow(){const d=new Date(),p=n=>String(n).padStart(2,"0");return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;}
+async function fetchRemoteRequests(){try{const r=await fetch(gistRawUrl,{cache:"no-store"});return (await r.text()).trim();}catch{return"";}}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+
+async function patchGist(content){
+    const url=`https://api.github.com/gists/${gistId}`;
+    const body={files:{}};
+    body.files[gistFileName]={content};
+    const r=await fetch(url,{method:"PATCH",headers:{"Authorization":"token "+githubToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(await r.text());
+    return await r.json();
+}
+
+async function loadRequests(){
+    const ul=document.getElementById("requestList"); ul.innerHTML="<li>로딩 중...</li>";
+    const remote=(await fetchRemoteRequests()).split("\n").filter(l=>l.trim());
+    if(remote.length===0){ ul.innerHTML="<li>요청 없음</li>"; return; }
+    ul.innerHTML="";
+    remote.forEach((line,idx)=>{
+        const li=document.createElement("li");
+        li.innerHTML=`<span style="flex:1;text-align:left;">${escapeHtml(line)}</span>
+        <button class="delete-btn" data-idx="${idx}">완료</button>`;
+        ul.appendChild(li);
+    });
+    document.querySelectorAll(".delete-btn").forEach(b=>b.onclick=async e=>{
+        const i=Number(e.currentTarget.dataset.idx);
+        if(!confirm("삭제하시겠습니까?"))return;
+        const arr=remote.slice(); arr.splice(i,1);
+        try{await patchGist(arr.join("\n")); loadRequests();}catch(err){alert("삭제 실패:"+err.message);}
+    });
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    loadRequests();
+    document.getElementById("addSharedBtn").onclick=async()=>{
+        const txt=document.getElementById("requestInput").value.trim();
+        if(!txt){alert("내용을 입력하세요");return;}
+        if(txt.length>200){alert("200자 이하로 입력하세요");return;}
+        const newLine=formatNow()+" | "+txt;
+        const old=(await fetchRemoteRequests());
+        try{await patchGist(newLine+(old? "\n"+old:"")); document.getElementById("requestInput").value=""; loadRequests(); alert("Gist에 추가됨");}
+        catch(err){alert("추가 실패:"+err.message);}
+    };
+});
+</script>
 </body>
 </html>
