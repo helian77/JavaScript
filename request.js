@@ -25,7 +25,7 @@ async function patchGist(content) {
     const resp = await fetch(url, {
         method: "PATCH",
         headers: {
-            "Authorization": "token " + githubToken,
+            "Authorization": "Bearer " + githubToken,  // 기존 token -> Bearer
             "Accept": "application/vnd.github.v3+json",
             "Content-Type": "application/json"
         },
